@@ -21,7 +21,14 @@ import {
   dayTitle,
 } from "@/lib/date";
 import { append, serverSnapshot, snapshot, subscribe } from "@/lib/fragments";
-import { record, type Recorder } from "@/lib/transcribe";
+import {
+  installLocal,
+  record,
+  support,
+  type Failure,
+  type Recorder,
+  type Support,
+} from "@/lib/transcribe";
 import { useReducedMotion } from "@/lib/use-reduced-motion";
 import { weave, type WovenParagraph } from "@/lib/weave";
 
@@ -34,6 +41,18 @@ const LAMP_INK = "#e3b77c";
 
 const GROUND = { day: "#e8e9e4", night: "#0d1e22" };
 
+const DISCLOSED_KEY = "thread:v1:disclosed";
+
+/* said plainly, in the app's register, when a recording produces nothing */
+const EXCUSE: Record<Failure, string> = {
+  "no-speech": "didn't catch anything",
+  denied: "the microphone is blocked",
+  "no-mic": "no microphone here",
+  unsupported: "this browser can't listen yet",
+  network: "couldn't transcribe that",
+  failed: "couldn't transcribe that",
+};
+
 export default function Page() {
   const [screen, setScreen] = useState<Screen>("capture");
   const [day, setDay] = useState<string>(() => dayKey());
@@ -42,6 +61,7 @@ export default function Page() {
   const [toast, setToast] = useState({ text: "", visible: false });
   const [progress, setProgress] = useState<0 | 1>(0);
   const [paragraphs, setParagraphs] = useState<WovenParagraph[]>([]);
+  const [speech, setSpeech] = useState<Support | null>(null);
 
   /* localStorage is the source of truth, so read from it rather than mirror it */
   const fragments = useSyncExternalStore(
@@ -54,6 +74,17 @@ export default function Page() {
   const recorder = useRef<Recorder | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ticker = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  /* ask what this browser can do before the first tap, so tapping is instant */
+  useEffect(() => {
+    let cancelled = false;
+    support().then((s) => {
+      if (!cancelled) setSpeech(s);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   /*
    * Left open overnight, the app would otherwise keep filing today's words
@@ -98,35 +129,73 @@ export default function Page() {
     );
   }, []);
 
-  const onMic = useCallback(async () => {
-    if (recording) {
-      if (ticker.current) clearInterval(ticker.current);
-      ticker.current = null;
-      setRecording(false);
-      setSeconds(0);
-
-      const active = recorder.current;
-      recorder.current = null;
-      if (!active) return;
-
-      const { text } = await active.stop();
-      if (!text) return;
-
-      const time = clock();
-      const today = dayKey();
-      append({ time, text }, today);
-      if (today !== day) setDay(today);
-
-      flash(`saved, ${time}`, 1800);
+  const startRecording = useCallback(async () => {
+    if (speech && !speech.supported) {
+      flash(EXCUSE.unsupported, 2400);
       return;
     }
 
-    recorder.current = record();
+    let local = speech?.supported === true && speech.local === "available";
+
+    /* the on-device pack is a one-time fetch, asked for by the first tap */
+    if (speech?.supported && speech.local === "downloadable") {
+      flash("getting ready to listen", 4000);
+      local = await installLocal();
+      setSpeech({ supported: true, local: local ? "available" : "unavailable" });
+    }
+
+    /*
+     * Where the browser will not promise on-device recognition, say so once.
+     * The fragments still never leave, but the audio might, and the app should
+     * not quietly imply otherwise.
+     */
+    if (!local) {
+      try {
+        if (!window.localStorage.getItem(DISCLOSED_KEY)) {
+          window.localStorage.setItem(DISCLOSED_KEY, "1");
+          flash("words are transcribed by your browser", 3200);
+        }
+      } catch {
+        /* private mode: skip the note rather than fail the recording */
+      }
+    }
+
+    recorder.current = record(local);
     setRecording(true);
     setSeconds(0);
-    setToast((t) => ({ ...t, visible: false }));
     ticker.current = setInterval(() => setSeconds((s) => s + 1), 1000);
-  }, [recording, day, flash]);
+  }, [speech, flash]);
+
+  const stopRecording = useCallback(async () => {
+    if (ticker.current) clearInterval(ticker.current);
+    ticker.current = null;
+    setRecording(false);
+    setSeconds(0);
+
+    const active = recorder.current;
+    recorder.current = null;
+    if (!active) return;
+
+    const outcome = await active.stop();
+
+    /* never invent a fragment: say what went wrong and save nothing */
+    if (!outcome.ok) {
+      flash(EXCUSE[outcome.reason], 2400);
+      return;
+    }
+
+    const time = clock();
+    const today = dayKey();
+    append({ time, text: outcome.text }, today);
+    if (today !== day) setDay(today);
+
+    flash(`saved, ${time}`, 1800);
+  }, [day, flash]);
+
+  const onMic = useCallback(() => {
+    if (recording) void stopRecording();
+    else void startRecording();
+  }, [recording, startRecording, stopRecording]);
 
   const onWeave = useCallback(async () => {
     const composed = await weave(fragments);
