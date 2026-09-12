@@ -1,0 +1,97 @@
+/*
+ * thRead design tokens.
+ * Values come from the design handoff and are final. Do not restyle.
+ */
+
+:root {
+  /* two grounds */
+  --overcast: #e8e9e4;
+  --nightfall: #0d1e22;
+
+  /* ink */
+  --ink: #191c1a;
+  --graphite: #585e5c;
+  --lamp: #e3b77c;
+  --thread: #7fa89b;
+  --title-ink: #f2e3cc;
+
+  /* hairlines */
+  --hairline-1: #dee0da;
+  --hairline-2: #d4d6d0;
+
+  --font-mono: var(--font-spline-sans-mono), ui-monospace, monospace;
+  --font-serif: var(--font-petrona), Georgia, serif;
+
+  /* one column, centred, edge to edge on a standard phone */
+  --measure: 430px;
+
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--overcast);
+}
+
+body {
+  font-family: var(--font-mono);
+  color: var(--ink);
+  overscroll-behavior: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+a {
+  color: var(--graphite);
+}
+
+a:hover {
+  color: var(--ink);
+}
+
+/* the recording cue on the mic button */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.14);
+    opacity: 0;
+  }
+}
+
+/*
+ * The weave is cut to an instant when motion is reduced. The transition
+ * strings are already built at duration 0 in the components, this is the
+ * backstop for anything declared in CSS.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

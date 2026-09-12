@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<![CDATA[<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans+Mono:wght@300;400;500&family=Petrona:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #E8E9E4; }
+    * { -webkit-tap-highlight-color: transparent; }
+    button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+    a { color: #585E5C; }
+    a:hover { color: #191C1A; }
+    @keyframes breathe { 0%,100% { transform: scale(1); opacity: .55 } 50% { transform: scale(1.14); opacity: 0 } }
+  </style>
+</helmet>
+
+<div style="position: fixed; inset: 0; overflow: hidden; background: #E8E9E4; font-family: 'Spline Sans Mono', ui-monospace, monospace;">
+
+  <sc-if value="{{ isCapture }}" hint-placeholder-val="{{ true }}">
+    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: calc(env(safe-area-inset-top) + 22px) 20px calc(env(safe-area-inset-bottom) + 18px);">
+      <div style="flex: 1; width: 100%; max-width: 430px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px;">
+        <div style="position: relative; display: grid; place-items: center;">
+          <div style="position: absolute; width: min(62vw, 54vh, 270px); height: min(62vw, 54vh, 270px); border-radius: 50%; border: 1px solid #7FA89B;">
+            <div style="{{ pulseStyle }}"></div>
+          </div>
+          <button onClick="{{ onMic }}" aria-label="record a fragment" style="position: relative; width: min(62vw, 54vh, 270px); height: min(62vw, 54vh, 270px); border-radius: 50%; background: #191C1A; display: grid; place-items: center; transition: background .25s ease, transform .18s ease;" style-active="transform: scale(.975)">
+            <div style="{{ threadGlyphStyle }}"></div>
+            <div style="{{ threadDotStyle }}"></div>
+          </button>
+        </div>
+        <div style="min-height: 44px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;">
+          <div style="font-size: 14px; font-weight: 400; letter-spacing: .01em; color: #191C1A;">{{ micLabel }}</div>
+          <div style="font-size: 12px; color: #585E5C; letter-spacing: .06em;">{{ micSub }}</div>
+        </div>
+      </div>
+      <button onClick="{{ onOpenTimeline }}" style="min-height: 44px; padding: 0 14px; display: flex; align-items: center; gap: 10px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #585E5C;" style-hover="color: #191C1A">
+        <span>today</span>
+        <span style="width: 3px; height: 3px; border-radius: 50%; background: #585E5C;"></span>
+        <span>{{ count }}</span>
+      </button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isTimeline }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;">
+      <div style="flex: 1; width: 100%; max-width: 430px; overflow-y: auto; padding: calc(env(safe-area-inset-top) + 22px) 20px 132px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 18px;">
+          <div style="font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #191C1A;">{{ dateShort }}</div>
+          <button onClick="{{ onBackToCapture }}" style="font-size: 12px; letter-spacing: .08em; color: #585E5C; min-height: 44px; padding: 0 2px;" style-hover="color: #191C1A">close</button>
+        </div>
+        <div style="font-size: 12px; color: #585E5C; letter-spacing: .04em; padding-bottom: 20px; border-bottom: 1px solid #D4D6D0;">{{ countLine }}</div>
+        <sc-for list="{{ fragments }}" as="f" hint-placeholder-count="4">
+          <div style="display: grid; grid-template-columns: 46px 1fr; gap: 12px; padding: 14px 0; border-bottom: 1px solid #DEE0DA;">
+            <div style="font-size: 12px; line-height: 1.5; color: #585E5C; font-variant-numeric: tabular-nums;">{{ f.time }}</div>
+            <div style="font-size: 13px; line-height: 1.5; color: #191C1A; font-weight: 300; text-wrap: pretty;">{{ f.text }}</div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 44px 0 0; font-size: 14px; color: #191C1A;">Say the first thing.</div>
+        </sc-if>
+        <button onClick="{{ onExport }}" style="margin-top: 26px; min-height: 44px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #585E5C;" style-hover="color: #191C1A">export · .txt · stays on this phone</button>
+      </div>
+      <div style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; padding: 26px 20px calc(env(safe-area-inset-bottom) + 18px); background: linear-gradient(to top, #E8E9E4 62%, rgba(232,233,228,0));">
+        <button onClick="{{ onWeave }}" style="width: 100%; max-width: 390px; min-height: 56px; border-radius: 2px; background: #0D1E22; color: #E3B77C; font-size: 13px; letter-spacing: .06em; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform .18s ease;" style-active="transform: scale(.99)">
+          <span>{{ weaveLabel }}</span>
+        </button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isWoven }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; overflow: hidden;">
+      <div style="{{ nightStyle }}"></div>
+      <div style="position: absolute; inset: 0; display: flex; justify-content: center;">
+        <div style="position: relative; width: 100%; max-width: 430px; padding: calc(env(safe-area-inset-top) + 22px) 20px calc(env(safe-area-inset-bottom) + 18px);">
+
+          <div style="{{ threadStyle }}"></div>
+
+          <div style="{{ rawStyle }}">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 18px;">
+              <div style="font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #191C1A;">{{ dateShort }}</div>
+              <div style="font-size: 12px; letter-spacing: .08em; color: #585E5C;">close</div>
+            </div>
+            <div style="font-size: 12px; color: #585E5C; letter-spacing: .04em; padding-bottom: 20px; border-bottom: 1px solid #D4D6D0;">{{ countLine }}</div>
+            <sc-for list="{{ rawRows }}" as="r" hint-placeholder-count="4">
+              <div style="{{ r.style }}">
+                <div style="font-size: 12px; line-height: 1.5; color: #585E5C; font-variant-numeric: tabular-nums;">{{ r.time }}</div>
+                <div style="font-size: 13px; line-height: 1.5; color: #191C1A; font-weight: 300;">{{ r.text }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="position: relative; height: 100%; display: flex; flex-direction: column;">
+            <div style="{{ chromeHeadStyle }}">
+              <div style="font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #7FA89B;">{{ dateShort }}</div>
+              <button onClick="{{ onBackToTimeline }}" style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #7FA89B; min-height: 44px; padding: 0 2px;" style-hover="color: #E3B77C">fragments</button>
+            </div>
+            <div style="flex: 1; overflow-y: auto; padding-left: 40px;">
+              <div style="{{ titleStyle }}">
+                <div style="font-family: Petrona, Georgia, serif; font-size: 30px; line-height: 1.15; color: #F2E3CC;">{{ dayTitle }}</div>
+                <div style="font-family: Petrona, Georgia, serif; font-style: italic; font-size: 16px; color: #7FA89B; padding-top: 4px;">{{ daySub }}</div>
+              </div>
+              <sc-for list="{{ paragraphs }}" as="p" hint-placeholder-count="4">
+                <div style="{{ p.style }}">
+                  <div style="{{ p.seamStyle }}">{{ p.tick }}</div>
+                  <div style="{{ p.inkStyle }}">{{ p.text }}</div>
+                </div>
+              </sc-for>
+              <div style="{{ chromeFootStyle }}">
+                <button onClick="{{ onExport }}" style="min-height: 44px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #7FA89B;" style-hover="color: #E3B77C">keep this day · export .txt</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="{{ flashWrapStyle }}">
+    <div style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; padding: 9px 14px; border-radius: 2px; background: #191C1A; color: #E8E9E4;">{{ flash }}</div>
+  </div>
+</div>
+]]>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:393,&quot;height&quot;:852},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;capture&quot;,&quot;timeline&quot;,&quot;the day&quot;],&quot;default&quot;:&quot;capture&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;weaveSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1.9,&quot;min&quot;:0.8,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;The weave&quot;},&quot;showSeams&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;The weave&quot;},&quot;lampInk&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#E3B77C&quot;,&quot;options&quot;:[&quot;#E3B77C&quot;,&quot;#EFD9B4&quot;,&quot;#D9A38A&quot;,&quot;#C9CBA3&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;The weave&quot;}}">
+const SEED = [
+  { time: "07:12", text: "awake before the alarm again. the heating pipes were ticking." },
+  { time: "07:49", text: "rain on the walk to the bus. i didn't mind it." },
+  { time: "09:26", text: "told priya about the oslo thing. she asked the one question i'd been avoiding." },
+  { time: "12:03", text: "ate outside for the first time in weeks. sun came out for about nine minutes." },
+  { time: "15:40", text: "drawings came back marked up in red. less bad than i expected." },
+  { time: "18:55", text: "walked the long way home. the light was going and everyone was on their phones." }
+];
+
+const WOVEN = [
+  { tick: "07:12", text: "I woke before the alarm again and lay there listening to the heating pipes tick. By the time I walked to the bus it was raining, and I found I didn't mind it." },
+  { tick: "09:26", text: "I told Priya about the Oslo thing. She asked the one question I had been avoiding, and I didn't have an answer ready." },
+  { tick: "12:03", text: "I ate outside for the first time in weeks. The sun came out for about nine minutes. In the afternoon the drawings came back marked up in red — less bad than I expected." },
+  { tick: "18:55", text: "I walked the long way home. The light was going, and everyone I passed was on their phone." }
+];
+
+const SCRAPS = [
+  "said i'd call my mother back and then didn't.",
+  "the bakery on the corner has changed its sign again.",
+  "keep thinking about what she said about staying.",
+  "bus was early for once and i missed it."
+];
+
+class Component extends DCLogic {
+  state = { screen: "capture", p: 0, rec: false, secs: 0, flash: null, frags: SEED.slice(), n: 0 };
+
+  componentDidMount() {
+    this.reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const start = this.props.startScreen;
+    if (start === "timeline") this.setState({ screen: "timeline" });
+    if (start === "the day") this.setState({ screen: "woven", p: 1 });
+  }
+  componentWillUnmount() { clearInterval(this.tick); clearTimeout(this.ft); }
+
+  dur() { return this.reduced ? 0 : (this.props.weaveSeconds ?? 1.9); }
+  tr(spec) { return this.reduced ? "none" : spec; }
+
+  now() {
+    const d = new Date();
+    return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+
+  say = () => {
+    if (this.state.rec) {
+      clearInterval(this.tick);
+      const t = this.now();
+      const text = SCRAPS[this.state.n % SCRAPS.length];
+      this.setState(s => ({ rec: false, secs: 0, n: s.n + 1, frags: s.frags.concat([{ time: t, text }]), flash: "saved, " + t }));
+      clearTimeout(this.ft);
+      this.ft = setTimeout(() => this.setState({ flash: null }), 1800);
+    } else {
+      this.setState({ rec: true, secs: 0, flash: null });
+      this.tick = setInterval(() => this.setState(s => ({ secs: s.secs + 1 })), 1000);
+    }
+  };
+
+  weave = () => {
+    this.setState({ screen: "woven", p: 0 });
+    if (this.reduced) { this.setState({ p: 1 }); return; }
+    requestAnimationFrame(() => requestAnimationFrame(() => this.setState({ p: 1 })));
+  };
+
+  exportDay = () => {
+    const lines = ["thRead — Tuesday 11 September", "", "THE DAY", ""];
+    WOVEN.forEach(w => lines.push(w.tick + "  " + w.text, ""));
+    lines.push("FRAGMENTS", "");
+    this.state.frags.forEach(f => lines.push(f.time + "  " + f.text));
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "thread-2026-09-11.txt";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    this.setState({ flash: "saved to your downloads" });
+    clearTimeout(this.ft);
+    this.ft = setTimeout(() => this.setState({ flash: null }), 2200);
+  };
+
+  renderVals() {
+    const { screen, p, rec, secs, flash, frags } = this.state;
+    const d = this.dur();
+    const on = p === 1;
+    const lamp = this.props.lampInk ?? "#E3B77C";
+    const seams = this.props.showSeams ?? true;
+    const mm = String(Math.floor(secs / 60)).padStart(2, "0") + ":" + String(secs % 60).padStart(2, "0");
+
+    return {
+      isCapture: screen === "capture",
+      isTimeline: screen === "timeline",
+      isWoven: screen === "woven",
+      isEmpty: frags.length === 0,
+      count: frags.length,
+      countLine: frags.length + (frags.length === 1 ? " fragment" : " fragments") + " · stays on this phone",
+      dateShort: "tue 11 sep",
+      dayTitle: "Tuesday",
+      daySub: "11 September, written at dusk",
+      weaveLabel: "weave " + frags.length + " fragments into today",
+      fragments: frags,
+      flash: flash || "",
+      micLabel: rec ? "listening. tap to stop." : "tap. say one thing.",
+      micSub: rec ? mm : "it saves. you're done.",
+
+      threadGlyphStyle: {
+        width: "56px", height: "1.5px", background: rec ? "#7FA89B" : "#E8E9E4",
+        transform: rec ? "rotate(0deg)" : "rotate(-11deg)",
+        transition: "all .5s cubic-bezier(.3,.7,.2,1)"
+      },
+      threadDotStyle: {
+        position: "absolute", width: "5px", height: "5px", borderRadius: "50%",
+        background: rec ? "#7FA89B" : "#E8E9E4",
+        left: rec ? "calc(50% + 28px)" : "calc(50% + 27px)",
+        top: rec ? "calc(50% - 1px)" : "calc(50% + 4px)",
+        transition: "all .5s cubic-bezier(.3,.7,.2,1)"
+      },
+      pulseStyle: rec
+        ? { width: "100%", height: "100%", borderRadius: "50%", background: "#7FA89B", animation: "breathe 2.4s ease-out infinite" }
+        : { width: "100%", height: "100%", borderRadius: "50%", background: "#7FA89B", opacity: 0 },
+
+      nightStyle: { position: "absolute", inset: 0, background: "#0D1E22", opacity: on ? 1 : 0, transition: this.tr(`opacity ${d * 0.75}s ease`) },
+      threadStyle: {
+        position: "absolute", left: "40px", top: "calc(env(safe-area-inset-top) + 84px)", bottom: "calc(env(safe-area-inset-bottom) + 74px)",
+        width: "1px", background: "#7FA89B", opacity: on ? 0.5 : 0.9,
+        transform: `scaleY(${on ? 1 : 0})`, transformOrigin: "top",
+        transition: this.tr(`transform ${d * 0.85}s cubic-bezier(.45,0,.2,1), opacity ${d}s ease`)
+      },
+      rawStyle: {
+        position: "absolute", left: "20px", right: "20px", top: "calc(env(safe-area-inset-top) + 22px)",
+        opacity: on ? 0 : 1, filter: on ? "blur(4px)" : "blur(0px)", pointerEvents: "none",
+        transition: this.tr(`opacity ${d * 0.5}s ease, filter ${d * 0.6}s ease`)
+      },
+      rawRows: frags.map((f, i) => ({
+        time: f.time, text: f.text,
+        style: {
+          display: "grid", gridTemplateColumns: "46px 1fr", gap: "12px", padding: "14px 0", borderBottom: "1px solid #DEE0DA",
+          transform: on ? `translateY(${(2.5 - i) * 9}px)` : "translateY(0)", opacity: on ? 0 : 1,
+          transition: this.tr(`transform ${d * 0.8}s cubic-bezier(.3,.7,.2,1) ${i * 0.045}s, opacity ${d * 0.45}s ease ${i * 0.045}s`)
+        }
+      })),
+      titleStyle: {
+        paddingBottom: "26px", opacity: on ? 1 : 0, transform: on ? "translateY(0)" : "translateY(10px)",
+        transition: this.tr(`opacity ${d * 0.5}s ease ${d * 0.3}s, transform ${d * 0.6}s ease ${d * 0.3}s`)
+      },
+      paragraphs: WOVEN.map((w, j) => ({
+        tick: seams ? w.tick : "", text: w.text,
+        style: {
+          position: "relative", paddingBottom: "20px",
+          opacity: on ? 1 : 0, transform: on ? "translateY(0)" : "translateY(14px)",
+          transition: this.tr(`opacity ${d * 0.55}s ease ${d * (0.4 + j * 0.09)}s, transform ${d * 0.7}s cubic-bezier(.2,.7,.2,1) ${d * (0.4 + j * 0.09)}s`)
+        },
+        inkStyle: { fontFamily: "Petrona, Georgia, serif", fontSize: "19px", lineHeight: 1.62, color: lamp, textWrap: "pretty" },
+        seamStyle: {
+          position: "absolute", left: "-40px", top: "9px", fontSize: "10px", letterSpacing: ".04em",
+          color: "#7FA89B", fontVariantNumeric: "tabular-nums", opacity: seams ? 0.85 : 0
+        }
+      })),
+      chromeHeadStyle: { display: "flex", alignItems: "baseline", justifyContent: "space-between", paddingBottom: "30px", opacity: on ? 1 : 0, transition: this.tr(`opacity ${d * 0.5}s ease ${d * 0.65}s`) },
+      chromeFootStyle: { padding: "14px 0 34px", opacity: on ? 1 : 0, transition: this.tr(`opacity ${d * 0.5}s ease ${d * 0.65}s`) },
+      flashWrapStyle: {
+        position: "absolute", left: 0, right: 0, bottom: "calc(env(safe-area-inset-bottom) + 96px)",
+        display: "flex", justifyContent: "center", pointerEvents: "none",
+        opacity: flash ? 1 : 0, transform: flash ? "translateY(0)" : "translateY(6px)", transition: "opacity .3s ease, transform .3s ease"
+      },
+
+      onMic: this.say,
+      onOpenTimeline: () => this.setState({ screen: "timeline" }),
+      onBackToCapture: () => this.setState({ screen: "capture" }),
+      onBackToTimeline: () => this.setState({ screen: "timeline", p: 0 }),
+      onWeave: this.weave,
+      onExport: this.exportDay
+    };
+  }
+}
+</script>
+</body>
+</html>

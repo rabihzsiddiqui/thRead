@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<![CDATA[<helmet>
+  <meta name="design_doc_mode" content="canvas" />
+  <link href="https://fonts.googleapis.com/css2?family=Spline+Sans+Mono:wght@300;400;500&family=Petrona:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #EFEEEA; font-family: system-ui, sans-serif; }
+    .dv-turn { padding: 40px 44px 32px; }
+    .dv-thd { display: flex; align-items: baseline; gap: 10px; margin: 0 0 20px; }
+    .dv-tid { font: 600 10px ui-monospace, Menlo, monospace; padding: 3px 7px; background: #191C1A; color: #fff; border-radius: 4px; text-decoration: none; }
+    .dv-tname { font: 600 13px/1.2 system-ui, sans-serif; color: #191C1A; }
+    .dv-opts { display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start; }
+    .dv-opt { flex: none; display: flex; flex-direction: column; gap: 10px; }
+    .dv-oid { font: 600 10.5px ui-monospace, Menlo, monospace; padding: 3px 7px; background: rgba(0,0,0,.08); color: #191C1A; border-radius: 5px; text-decoration: none; }
+    .dv-olabel { display: flex; flex-direction: column; gap: 3px; font: 400 11.5px/1.4 system-ui, sans-serif; color: rgba(0,0,0,.6); max-width: 340px; }
+    .dv-card { width: 340px; height: 640px; background: #E8E9E4; border: 1px solid rgba(0,0,0,.1); border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; position: relative; }
+    .dv-next { margin: 22px 0 0; font: 12px/1.5 system-ui, sans-serif; color: rgba(0,0,0,.5); }
+    button.dv-ctl { font: 500 10.5px ui-monospace, Menlo, monospace; letter-spacing: .04em; text-transform: uppercase; padding: 7px 10px; border-radius: 4px; border: 1px solid rgba(0,0,0,.15); background: #fff; color: #191C1A; cursor: pointer; }
+    button.dv-ctl:hover { background: #191C1A; color: #fff; }
+    label.dv-rm { font: 11px ui-monospace, Menlo, monospace; color: rgba(0,0,0,.55); display: flex; align-items: center; gap: 5px; }
+  </style>
+</helmet>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">The weave: timeline → the Day</span></div>
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="1a">
+      <a class="dv-oid" href="#1a">1a</a>
+      <div class="dv-olabel"><b>Gather</b> — timestamp rail holds still; each row slides and fades into one centred column. Ground crossfades under it. ~1.9s, current build.</div>
+      <div class="dv-card">
+        <div style="{{ a.rootStyle }}">
+          <sc-for list="{{ a.rows }}" as="r" hint-placeholder-count="4">
+            <div style="{{ r.rowStyle }}">
+              <div style="{{ r.tickStyle }}">{{ r.tick }}</div>
+              <div style="{{ r.textStyle }}">{{ r.text }}</div>
+            </div>
+          </sc-for>
+          <div style="{{ a.threadStyle }}"></div>
+          <sc-for list="{{ a.paras }}" as="p" hint-placeholder-count="4">
+            <div style="{{ p.wrapStyle }}">
+              <div style="{{ p.tickStyle }}">{{ p.tick }}</div>
+              <div style="{{ p.inkStyle }}">{{ p.text }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="position: absolute; left: 12px; bottom: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <button class="dv-ctl" onClick="{{ a.replay }}">replay</button>
+          <label class="dv-rm"><input type="checkbox" checked="{{ a.rm }}" onChange="{{ a.toggleRm }}" />reduced motion</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="dv-opt" id="1b">
+      <a class="dv-oid" href="#1b">1b</a>
+      <div class="dv-olabel"><b>Reel in</b> — each row is a thread stub running to the margin rule; rows reel up top-to-bottom into the rule as it draws, then the day fills where they were. ~2.4s, most literal to "weaving."</div>
+      <div class="dv-card">
+        <div style="{{ b.rootStyle }}">
+          <sc-for list="{{ b.rows }}" as="r" hint-placeholder-count="4">
+            <div style="{{ r.rowStyle }}">
+              <div style="{{ r.tickStyle }}">{{ r.tick }}</div>
+              <div style="{{ r.stubStyle }}"></div>
+              <div style="{{ r.textStyle }}">{{ r.text }}</div>
+            </div>
+          </sc-for>
+          <div style="{{ b.threadStyle }}"></div>
+          <sc-for list="{{ b.paras }}" as="p" hint-placeholder-count="4">
+            <div style="{{ p.wrapStyle }}">
+              <div style="{{ p.tickStyle }}">{{ p.tick }}</div>
+              <div style="{{ p.inkStyle }}">{{ p.text }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="position: absolute; left: 12px; bottom: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <button class="dv-ctl" onClick="{{ b.replay }}">replay</button>
+          <label class="dv-rm"><input type="checkbox" checked="{{ b.rm }}" onChange="{{ b.toggleRm }}" />reduced motion</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="dv-opt" id="1c">
+      <a class="dv-oid" href="#1c">1c</a>
+      <div class="dv-olabel"><b>Light reveal</b> — nothing moves. Raw list dissolves in place as the ground darkens; paragraphs cross-fade in, each a beat later going down the page, like a lamp settling. Quietest take. ~2.6s.</div>
+      <div class="dv-card">
+        <div style="{{ c.rootStyle }}">
+          <sc-for list="{{ c.rows }}" as="r" hint-placeholder-count="4">
+            <div style="{{ r.rowStyle }}">
+              <div style="{{ r.tickStyle }}">{{ r.tick }}</div>
+              <div style="{{ r.textStyle }}">{{ r.text }}</div>
+            </div>
+          </sc-for>
+          <sc-for list="{{ c.paras }}" as="p" hint-placeholder-count="4">
+            <div style="{{ p.wrapStyle }}">
+              <div style="{{ p.tickStyle }}">{{ p.tick }}</div>
+              <div style="{{ p.inkStyle }}">{{ p.text }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="position: absolute; left: 12px; bottom: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <button class="dv-ctl" onClick="{{ c.replay }}">replay</button>
+          <label class="dv-rm"><input type="checkbox" checked="{{ c.rm }}" onChange="{{ c.toggleRm }}" />reduced motion</label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Try next: "make <a class="dv-oid" href="#1b">1b</a> the build" · "combine the rule-draw from <a class="dv-oid" href="#1b">1b</a> with the light-darken of <a class="dv-oid" href="#1c">1c</a>" · "slower, more like a held breath"</p>
+</section>
+]]>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const FRAGS = [
+  { time: "07:12", text: "awake before the alarm again." },
+  { time: "09:26", text: "told priya about the oslo thing." },
+  { time: "12:03", text: "ate outside for the first time in weeks." },
+  { time: "18:55", text: "walked the long way home." }
+];
+const WOVEN = [
+  { tick: "07:12", text: "I woke before the alarm again and lay there listening to the pipes tick." },
+  { tick: "09:26", text: "I told Priya about the Oslo thing. She asked the question I'd been avoiding." },
+  { tick: "12:03", text: "I ate outside for the first time in weeks. Nine minutes of sun." },
+  { tick: "18:55", text: "I walked the long way home while the light was going." }
+];
+const OVERCAST = "#E8E9E4", INK = "#191C1A", GRAPHITE = "#585E5C", NIGHT = "#0D1E22", LAMP = "#E3B77C", THREAD = "#7FA89B";
+
+class Component extends DCLogic {
+  state = { a: { p: 1, rm: false }, b: { p: 1, rm: false }, c: { p: 1, rm: false } };
+
+  replay(key) {
+    this.setState({ [key]: { ...this.state[key], p: 0 } });
+    const rm = this.state[key].rm;
+    if (rm) { this.setState(s => ({ [key]: { ...s[key], p: 1 } })); return; }
+    requestAnimationFrame(() => requestAnimationFrame(() => this.setState(s => ({ [key]: { ...s[key], p: 1 } }))));
+  }
+  toggleRm(key, e) { this.setState(s => ({ [key]: { ...s[key], rm: e.target.checked } })); }
+
+  base() {
+    return { position: "relative", width: "100%", height: "100%", overflow: "hidden", fontFamily: "'Spline Sans Mono', monospace" };
+  }
+
+  // 1a — Gather
+  buildA(on, animate) {
+    const d = animate ? 1 : 0;
+    return {
+      rootStyle: { ...this.base(), background: on ? this.mix(NIGHT) : OVERCAST, transition: d ? `background ${1.4}s ease` : "none", padding: "22px 20px" },
+      rows: FRAGS.map((f, i) => ({
+        tick: f.time, text: f.text,
+        rowStyle: {
+          display: "grid", gridTemplateColumns: "42px 1fr", gap: "10px", padding: "10px 0", borderBottom: "1px solid #D9DBD5",
+          opacity: on ? 0 : 1, transform: on ? `translateY(${(3 - i) * 8}px)` : "translateY(0)", pointerEvents: "none",
+          transition: d ? `opacity .5s ease ${i * 0.12}s, transform .7s cubic-bezier(.3,.7,.2,1) ${i * 0.12}s` : "none"
+        },
+        tickStyle: { fontSize: "11px", color: GRAPHITE },
+        textStyle: { fontSize: "12px", color: INK, fontWeight: 300 }
+      })),
+      threadStyle: {
+        position: "absolute", left: "40px", top: "70px", bottom: "70px", width: "1px", background: THREAD,
+        transform: `scaleY(${on ? 1 : 0})`, transformOrigin: "top", opacity: on ? .6 : 0,
+        transition: d ? `transform 1.1s cubic-bezier(.4,0,.2,1), opacity 1.1s ease` : "none"
+      },
+      paras: WOVEN.map((w, j) => ({
+        tick: w.tick, text: w.text,
+        wrapStyle: {
+          position: "relative", paddingLeft: "34px", paddingBottom: "16px",
+          display: on ? "block" : "none",
+          opacity: on ? 1 : 0, transform: on ? "translateY(0)" : "translateY(12px)",
+          transition: d ? `opacity .5s ease ${0.5 + j * 0.15}s, transform .6s cubic-bezier(.2,.7,.2,1) ${0.5 + j * 0.15}s` : "none"
+        },
+        tickStyle: { position: "absolute", left: 0, top: "3px", fontSize: "9px", color: THREAD },
+        inkStyle: { fontFamily: "Petrona, serif", fontSize: "14px", lineHeight: 1.55, color: LAMP }
+      }))
+    };
+  }
+  // 1b — Reel in
+  buildB(on, animate) {
+    const d = animate ? 1 : 0;
+    return {
+      rootStyle: { ...this.base(), background: on ? this.mix(NIGHT) : OVERCAST, transition: d ? `background 1.6s ease .4s` : "none", padding: "22px 20px 22px 40px" },
+      rows: FRAGS.map((f, i) => ({
+        tick: f.time, text: f.text,
+        rowStyle: {
+          position: "relative", display: "grid", gridTemplateColumns: "38px 14px 1fr", gap: "6px", alignItems: "center",
+          height: on ? "0px" : "34px", padding: on ? "0 0" : "6px 0", overflow: "hidden", borderBottom: on ? "1px solid transparent" : "1px solid #D9DBD5",
+          transition: d ? `height .4s cubic-bezier(.5,0,.5,1) ${i * 0.35}s, padding .4s ease ${i * 0.35}s, border-color .3s ease ${i * 0.35}s` : "none"
+        },
+        tickStyle: { fontSize: "10px", color: GRAPHITE },
+        stubStyle: {
+          height: "1px", background: THREAD,
+          width: on ? "0px" : "10px",
+          transition: d ? `width .3s ease ${i * 0.35}s` : "none"
+        },
+        textStyle: { fontSize: "11px", color: INK, fontWeight: 300, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }
+      })),
+      threadStyle: {
+        position: "absolute", left: "24px", top: "22px", bottom: "22px", width: "1px", background: THREAD,
+        transform: `scaleY(${on ? 1 : 0.02})`, transformOrigin: "top", opacity: on ? .7 : .9,
+        transition: d ? `transform 1.5s cubic-bezier(.5,0,.4,1)` : "none"
+      },
+      paras: WOVEN.map((w, j) => ({
+        tick: w.tick, text: w.text,
+        wrapStyle: {
+          paddingBottom: "14px",
+          opacity: on ? 1 : 0,
+          transition: d ? `opacity .5s ease ${0.55 + j * 0.15}s` : "none"
+        },
+        tickStyle: { fontSize: "9px", color: THREAD, paddingBottom: "2px" },
+        inkStyle: { fontFamily: "Petrona, serif", fontSize: "14px", lineHeight: 1.55, color: LAMP }
+      }))
+    };
+  }
+  // 1c — Light reveal
+  buildC(on, animate) {
+    const d = animate ? 1 : 0;
+    return {
+      rootStyle: { ...this.base(), background: on ? this.mix(NIGHT) : OVERCAST, transition: d ? `background 1.8s linear` : "none", padding: "22px 20px" },
+      rows: FRAGS.map((f, i) => ({
+        tick: f.time, text: f.text,
+        rowStyle: {
+          position: "absolute", left: "20px", right: "20px", top: (22 + i * 40) + "px",
+          display: "grid", gridTemplateColumns: "42px 1fr", gap: "10px", padding: "10px 0", borderBottom: "1px solid #D9DBD5",
+          opacity: on ? 0 : 1, pointerEvents: "none",
+          transition: d ? `opacity .8s ease` : "none"
+        },
+        tickStyle: { fontSize: "11px", color: GRAPHITE },
+        textStyle: { fontSize: "12px", color: INK, fontWeight: 300 }
+      })),
+      paras: WOVEN.map((w, j) => ({
+        tick: w.tick, text: w.text,
+        wrapStyle: {
+          position: "absolute", left: "20px", right: "20px", top: (22 + j * 62) + "px", paddingBottom: "16px",
+          opacity: on ? 1 : 0, filter: on ? "blur(0px)" : "blur(3px)",
+          transition: d ? `opacity .9s ease ${0.5 + j * 0.35}s, filter 1s ease ${0.5 + j * 0.35}s` : "none"
+        },
+        tickStyle: { fontSize: "9px", color: THREAD, paddingBottom: "2px" },
+        inkStyle: { fontFamily: "Petrona, serif", fontSize: "14px", lineHeight: 1.55, color: LAMP }
+      }))
+    };
+  }
+  mix(hex) { return hex; }
+
+  renderVals() {
+    const A = this.state.a, B = this.state.b, C = this.state.c;
+    const onA = A.p === 1, onB = B.p === 1, onC = C.p === 1;
+    return {
+      a: { ...this.buildA(onA, !A.rm), rm: A.rm, replay: () => this.replay("a"), toggleRm: (e) => this.toggleRm("a", e) },
+      b: { ...this.buildB(onB, !B.rm), rm: B.rm, replay: () => this.replay("b"), toggleRm: (e) => this.toggleRm("b", e) },
+      c: { ...this.buildC(onC, !C.rm), rm: C.rm, replay: () => this.replay("c"), toggleRm: (e) => this.toggleRm("c", e) }
+    };
+  }
+}
+</script>
+</body>
+</html>
