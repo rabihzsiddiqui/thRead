@@ -77,15 +77,98 @@ export function serverSnapshot(): Fragment[] {
   return EMPTY;
 }
 
+/** Every mutation goes through here, so the cache and listeners stay honest. */
+export function replace(next: Fragment[], day: string = dayKey()): Fragment[] {
+  const value = next.length > 0 ? next : EMPTY;
+  cache = { day, value };
+  write(value, day);
+  for (const listener of listeners) listener();
+  return value;
+}
+
 export function append(
   fragment: Fragment,
   day: string = dayKey(),
 ): Fragment[] {
-  const next = [...snapshot(day), fragment];
-  cache = { day, value: next };
-  write(next, day);
-  for (const listener of listeners) listener();
-  return next;
+  return replace([...snapshot(day), fragment], day);
+}
+
+/** Puts a fragment back where it was. Undo for a delete. */
+export function insertAt(
+  fragment: Fragment,
+  index: number,
+  day: string = dayKey(),
+): Fragment[] {
+  const current = snapshot(day);
+  const at = Math.max(0, Math.min(index, current.length));
+  return replace([...current.slice(0, at), fragment, ...current.slice(at)], day);
+}
+
+export function removeAt(index: number, day: string = dayKey()): Fragment[] {
+  const current = snapshot(day);
+  if (index < 0 || index >= current.length) return current;
+  return replace([...current.slice(0, index), ...current.slice(index + 1)], day);
+}
+
+/**
+ * Moves a fragment and gives it a time that matches where it landed, halfway
+ * between its new neighbours. The list is a record of when things happened,
+ * so position and timestamp have to agree.
+ */
+export function move(
+  from: number,
+  to: number,
+  day: string = dayKey(),
+): Fragment[] {
+  const current = snapshot(day);
+  if (from === to || from < 0 || from >= current.length) return current;
+  if (to < 0 || to >= current.length) return current;
+
+  const moved = current[from];
+  const rest = [...current.slice(0, from), ...current.slice(from + 1)];
+  const placed = [...rest.slice(0, to), moved, ...rest.slice(to)];
+
+  const before = placed[to - 1];
+  const after = placed[to + 1];
+  const retimed: Fragment = {
+    ...moved,
+    time: between(before?.time, after?.time, moved.time),
+  };
+
+  return replace(
+    [...placed.slice(0, to), retimed, ...placed.slice(to + 1)],
+    day,
+  );
+}
+
+const DAY_START = 0;
+const DAY_END = 23 * 60 + 59;
+
+function between(
+  before: string | undefined,
+  after: string | undefined,
+  fallback: string,
+): string {
+  const lo = before ? toMinutes(before) : null;
+  const hi = after ? toMinutes(after) : null;
+
+  if (lo !== null && hi !== null) return toClock(Math.round((lo + hi) / 2));
+  // at an edge, sit a few minutes outside the neighbour rather than jump
+  if (lo !== null) return toClock(Math.min(DAY_END, lo + 5));
+  if (hi !== null) return toClock(Math.max(DAY_START, hi - 5));
+  return fallback;
+}
+
+function toMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+function toClock(total: number): string {
+  const clamped = Math.max(DAY_START, Math.min(DAY_END, total));
+  const h = Math.floor(clamped / 60);
+  const m = clamped % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
 /** Every day that has fragments, newest first. */

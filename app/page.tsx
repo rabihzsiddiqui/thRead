@@ -20,7 +20,16 @@ import {
   daySub,
   dayTitle,
 } from "@/lib/date";
-import { append, serverSnapshot, snapshot, subscribe } from "@/lib/fragments";
+import {
+  append,
+  insertAt,
+  move,
+  removeAt,
+  serverSnapshot,
+  snapshot,
+  subscribe,
+  type Fragment,
+} from "@/lib/fragments";
 import {
   installLocal,
   record,
@@ -58,7 +67,11 @@ export default function Page() {
   const [day, setDay] = useState<string>(() => dayKey());
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
-  const [toast, setToast] = useState({ text: "", visible: false });
+  const [toast, setToast] = useState({
+    text: "",
+    visible: false,
+    undoable: false,
+  });
   const [progress, setProgress] = useState<0 | 1>(0);
   const [paragraphs, setParagraphs] = useState<WovenParagraph[]>([]);
   const [speech, setSpeech] = useState<Support | null>(null);
@@ -120,14 +133,52 @@ export default function Page() {
     };
   }, []);
 
-  const flash = useCallback((text: string, ms: number) => {
+  const flash = useCallback((text: string, ms: number, undoable = false) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast({ text, visible: true });
+    setToast({ text, visible: true, undoable });
     toastTimer.current = setTimeout(
       () => setToast((t) => ({ ...t, visible: false })),
       ms,
     );
   }, []);
+
+  /*
+   * A deleted fragment is held until the toast goes, so a mistaken tap in
+   * edit mode costs nothing. This is a diary: losing an entry for good on a
+   * single tap is not a reasonable price for tidying.
+   */
+  const undone = useRef<{
+    fragment: Fragment;
+    index: number;
+    day: string;
+  } | null>(null);
+
+  const onRemove = useCallback(
+    (index: number) => {
+      const fragment = fragments[index];
+      if (!fragment) return;
+      undone.current = { fragment, index, day };
+      removeAt(index, day);
+      flash("fragment removed", 5000, true);
+    },
+    [fragments, day, flash],
+  );
+
+  const onUndoRemove = useCallback(() => {
+    const held = undone.current;
+    if (!held) return;
+    insertAt(held.fragment, held.index, held.day);
+    undone.current = null;
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast((t) => ({ ...t, visible: false }));
+  }, []);
+
+  const onMoveFragment = useCallback(
+    (from: number, to: number) => {
+      move(from, to, day);
+    },
+    [day],
+  );
 
   const startRecording = useCallback(async () => {
     if (speech && !speech.supported) {
@@ -257,6 +308,8 @@ export default function Page() {
           onClose={() => setScreen("capture")}
           onExport={onExport}
           onWeave={onWeave}
+          onRemove={onRemove}
+          onMove={onMoveFragment}
         />
       )}
 
@@ -280,7 +333,15 @@ export default function Page() {
         />
       )}
 
-      <Toast text={toast.text} visible={toast.visible} />
+      <Toast
+        text={toast.text}
+        visible={toast.visible}
+        action={
+          toast.undoable
+            ? { label: "undo", onAction: onUndoRemove }
+            : undefined
+        }
+      />
     </main>
   );
 }

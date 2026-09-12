@@ -5,13 +5,27 @@ import styles from "./thread.module.css";
 type ToastProps = {
   text: string;
   visible: boolean;
+  /** when present the chip becomes tappable, for undoing what it announced */
+  action?: { label: string; onAction: () => void };
 };
 
 /**
  * Text and visibility are separate so the chip keeps its message through the
  * fade out instead of emptying itself before it has finished leaving.
  */
-export default function Toast({ text, visible }: ToastProps) {
+export default function Toast({ text, visible, action }: ToastProps) {
+  const body = (
+    <>
+      {text}
+      {action ? (
+        <>
+          <span className={styles.toastDot} />
+          <span className={styles.toastAction}>{action.label}</span>
+        </>
+      ) : null}
+    </>
+  );
+
   return (
     <div
       className={styles.toastWrap}
@@ -21,7 +35,13 @@ export default function Toast({ text, visible }: ToastProps) {
         transform: visible ? "translateY(0)" : "translateY(6px)",
       }}
     >
-      <div className={styles.toast}>{text}</div>
+      {action && visible ? (
+        <button type="button" className={styles.toastButton} onClick={action.onAction}>
+          {body}
+        </button>
+      ) : (
+        <div className={styles.toast}>{body}</div>
+      )}
     </div>
   );
 }
